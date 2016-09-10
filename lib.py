@@ -85,6 +85,7 @@ class Table:
     def __init__(self, data=None):
         self.data = []
         self.name = "Table"
+        self.nullValue =""
         if data is not None:
             self.data.extend(data)
 
@@ -110,7 +111,7 @@ class Table:
 
     def set(self, line: int, column: int, value):
         while line >= self.getLineCount():
-            self.addLine(DataLine())
+            self.addLine(DataLine(self.nullValue))
         self.data[line].set(column, value)
 
     def getLineCount(self):

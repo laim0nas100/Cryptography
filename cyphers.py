@@ -1,44 +1,10 @@
 import math
 
+from libs.crypt import IOlib
 from libs.crypt.lib import *
 
 
-def __go(indexArrayList: DataLine, current: DataLine, left: DataLine, i:int, maxLength:int):
-    length = current.__len__()
 
-    if not length < maxLength:
-        indexArrayList.add(current)
-        print("add:"+current.__str__())
-        return
-    else:
-
-        current.add(left.remove(i))
-        length = left.__len__()
-        print("Cur:" + current.__str__() + " Left:" + left.__str__() + " len =" + str(length), end="")
-        print(" index:" + str(i))
-        a = 0
-        if a<length:
-            while a < length:
-                __go(indexArrayList,current.__copy__(), left.__copy__(), a, maxLength)
-                a += 1
-        else:
-            indexArrayList.add(current)
-            print("add:" + current.__str__())
-            return
-
-def generateIndexList(size:int,maxLength:int):
-    maxLength = min(size,maxLength)
-    print("MaxLen:"+str(maxLength))
-    array = DataLine()
-    indexArrayList = DataLine()
-    indexArray = DataLine()
-    for i in range(0, size):
-        indexArray.add(i)
-    for ind in range(0, maxLength):
-        newArray = DataLine()
-        __go(indexArrayList, newArray.__copy__(), indexArray.__copy__(), ind, maxLength)
-
-    return indexArrayList
 
 class Skytale:
 
@@ -63,7 +29,7 @@ class Skytale:
     @staticmethod
     def bruteForce(text, min, max):
         for i in range(min,max+1):
-            print("number=" + str(i) +":" + Skytale.decrypt(text, i))
+            print(str(i) +": " + Skytale.decrypt(text, i))
 
 
 class Transposition:
@@ -85,7 +51,7 @@ class Transposition:
         return cmpItems
 
     @staticmethod
-    def getKeyArray(key, alphabet):
+    def getKeyArray(key, alphabet) -> list:
         sortedKey = DataLine()
         array = DataLine()
         array.populateFromString(key)
@@ -93,8 +59,6 @@ class Transposition:
         sortedKey.data.sort(key=cmp_to_key(Transposition.cmpByAlphabet(alphabet)))
         keyNumbers = DataLine()
         print(sortedKey.data)
-        i = 0
-
         for letter in array.data:
             # print(" checking:"+letter,)
             number = sortedKey.indexOf(letter)
@@ -107,8 +71,9 @@ class Transposition:
         # print sortedKey.__str__()
 
         return keyNumbers.data
+
     @staticmethod
-    def transpositionalTable(text:str, columnCount:int):
+    def transpositionalTable(text:str, columnCount:int) -> Table:
         table = Table()
         index = 0
         size = text.__len__()
@@ -131,17 +96,134 @@ class Transposition:
         table.equalize()
         return table
 
-
     @staticmethod
-    def transpositionSingle(text, key, linesAreColumns=False):
-        rowLen = len(key)
-        table = Transposition.transpositionalTable(text, rowLen)
-        table.equalize()
-        # Reading table
-        ans =""
-        for line in table.data:
+    def decrypt(transTable:Table, key:list) -> str:
+        ans = ""
+        strKey = ""
+        for i in key:
+            strKey+= str(i)
+
+        for line in transTable.data:
             for i in key:
                 ans += line.data[i]
 
+
+        return strKey+": "+ans
+
+    @staticmethod
+    def decryptSingle(text, key, linesAreColumns=False) -> str:
+        rowLen = len(key)
+        table = Transposition.transpositionalTable(text, rowLen)
+
+        return Transposition.decrypt(table,key)
+
+    @staticmethod
+    def bruteForceSetLength(text, length, maxLength) -> list:
+        indexList = IOlib.generateIndexList(length, maxLength)
+        table = Transposition.transpositionalTable(text,length)
+        ansList = list()
+        for k in indexList:
+            ansList.append(Transposition.decrypt(table, k))
+        return ansList
+
+    @staticmethod
+    def bruteForceLengthInterval(text, rangeStart, rangeEnd):
+        fullList = list()
+        for i in range(rangeStart,rangeEnd+1):
+            smallList = Transposition.bruteForceSetLength(text,i,i)
+            for str in smallList:
+                fullList.append(str)
+        return fullList
+
+class Fence:
+
+    @staticmethod
+    def encrypt(text:str, k:int)-> DataLine:
+        rows = DataLine()
+        # Prepare row
+        for i in range(0,k):
+            row = list()
+            rows.add(row)
+        # bounce rows
+        index =0
+        increment = 1
+        print("k:"+str(k))
+        for char in text:
+            print("index:"+str(index))
+            rows.data[index].append(char)
+            index += increment
+            if index >= k:
+                increment = -1
+                index = k-2
+            elif index < 0:
+                index = 1
+                increment = 1
+
+
+        for r in rows.data:
+            print(r)
+
+        return rows
+
+
+
+
+    @staticmethod
+    def makeFanceTable(text:str, k:int)->Table:
+        table = Table()
+        table.nullValue ="_"
+        line = 0
+        column = 0
+        increment = 1
+        for char in text:
+            table.set(line,column,char)
+            column+=1
+            line += increment
+            if line >= k:
+                increment = -1
+                line = k - 2
+            elif line < 0:
+                line = 1
+                increment = 1
+        return table
+
+    @staticmethod
+    def decrypt(text: str, k: int, reverse=False) -> str:
+        ans=""
+        size = len(text)
+        txt = DataLine()
+        txt.populateFromString(text)
+        table = Fence.makeFanceTable("#" * size, k)
+        table.equalize()
+        if(reverse):
+            table.data.reverse()
+        for row in table.data:
+            symLen = row.data.count("#")
+            for i in range(0,symLen):
+                index = row.indexOf("#")
+                row.set(index,txt.remove(0))
+        line = 0
+        column = 0
+        increment = 1
+        if reverse:
+            line = size-1
+
         table.printMe()
-        return ans
+        while column < size:
+            ans+= table.get(line,column)
+            column += 1
+            line += increment
+            if line >= k:
+                increment = -1
+                line = k - 2
+            elif line < 0:
+                line = 1
+                increment = 1
+        return str(k)+";"+ans
+
+    @staticmethod
+    def bruteForce(text:str,rangeStart:int,rangeEnd:int,reversed=False)->list:
+        fullList = list()
+        for i in range(rangeStart,rangeEnd+1):
+            fullList.append(Fence.decrypt(text,i,reversed))
+        return fullList
