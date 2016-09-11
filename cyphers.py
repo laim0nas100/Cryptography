@@ -1,21 +1,18 @@
 import math
-
 from libs.crypt import IOlib
 from libs.crypt.lib import *
-
-
 
 
 class Skytale:
 
     @staticmethod
     def decrypt(text, k, fromBelow = False):
-        lines = list()
+        lines = ArrayList()
 
         for i in range(0, k):
             index = i
             lines.append("")
-            while (index) < len(text):
+            while index < len(text):
                 # print(index + i)
                 lines[i] += text[index]
                 index += k
@@ -31,17 +28,15 @@ class Skytale:
         for i in range(min,max+1):
             print(str(i) +": " + Skytale.decrypt(text, i))
 
-
 class Transposition:
 
     @staticmethod
     def cmpByAlphabet(alphabet):
-        line = DataLine()
+        line = ArrayList()
         line.populateFromString(alphabet)
-
         def cmpItems(a, b):
-            index1 = line.data.index(a)
-            index2 = line.data.index(b)
+            index1 = line.indexOf(a)
+            index2 = line.indexOf(b)
             ans = 0
             if index1 < index2:
                 ans = -1
@@ -51,26 +46,26 @@ class Transposition:
         return cmpItems
 
     @staticmethod
-    def getKeyArray(key, alphabet) -> list:
-        sortedKey = DataLine()
-        array = DataLine()
-        array.populateFromString(key)
-        sortedKey.populateFromString(key)
-        sortedKey.data.sort(key=cmp_to_key(Transposition.cmpByAlphabet(alphabet)))
-        keyNumbers = DataLine()
-        print(sortedKey.data)
-        for letter in array.data:
+    def getKeyArray(Key, alphabet) -> ArrayList:
+        sortedKey = ArrayList()
+        array = ArrayList()
+        array.populateFromString(Key)
+        sortedKey.populateFromString(Key)
+        sortedKey.sort(key=cmp_to_key(Transposition.cmpByAlphabet(alphabet)))
+        keyNumbers = ArrayList()
+        print(sortedKey)
+        for letter in array:
             # print(" checking:"+letter,)
             number = sortedKey.indexOf(letter)
-            if not number in keyNumbers.data:
-                keyNumbers.add(number)
+            if not number in keyNumbers:
+                keyNumbers.append(number)
             else:
-                keyNumbers.add(number+1)
+                keyNumbers.append(number+1)
             # print (keyNumbers.data)
         # print array.__str__()
         # print sortedKey.__str__()
 
-        return keyNumbers.data
+        return keyNumbers
 
     @staticmethod
     def transpositionalTable(text:str, columnCount:int) -> Table:
@@ -79,14 +74,14 @@ class Transposition:
         size = text.__len__()
         columnLen = math.ceil(size/columnCount)
         while table.getLineCount() < columnLen:
-            table.addLine(DataLine())
+            table.addLine(ArrayList())
         outOfSymbols = False
         # columnCount, columnLen = columnLen, columnCount
         for colIndex in range(0, columnCount):
-            if(outOfSymbols):
+            if outOfSymbols:
                 break
             for lnIndex in range(0, columnLen):
-                if (outOfSymbols):
+                if outOfSymbols:
                     break
                 table.set(lnIndex, colIndex, text[index])
                 index+=1
@@ -103,10 +98,9 @@ class Transposition:
         for i in key:
             strKey+= str(i)
 
-        for line in transTable.data:
+        for line in transTable.lines:
             for i in key:
-                ans += line.data[i]
-
+                ans += line[i]
 
         return strKey+": "+ans
 
@@ -118,39 +112,40 @@ class Transposition:
         return Transposition.decrypt(table,key)
 
     @staticmethod
-    def bruteForceSetLength(text, length, maxLength) -> list:
+    def bruteForceSetLength(text, length, maxLength) -> ArrayList:
         indexList = IOlib.generateIndexList(length, maxLength)
         table = Transposition.transpositionalTable(text,length)
-        ansList = list()
+        ansList = ArrayList()
         for k in indexList:
             ansList.append(Transposition.decrypt(table, k))
         return ansList
 
     @staticmethod
-    def bruteForceLengthInterval(text, rangeStart, rangeEnd):
-        fullList = list()
+    def bruteForceLengthInterval(text, rangeStart, rangeEnd) -> ArrayList:
+        fullList = ArrayList()
         for i in range(rangeStart,rangeEnd+1):
             smallList = Transposition.bruteForceSetLength(text,i,i)
-            for str in smallList:
-                fullList.append(str)
+            for string in smallList:
+                fullList.append(string)
         return fullList
 
 class Fence:
-
+    tableNullValue = "_"
+    unusedCharacter= "#"
     @staticmethod
-    def encrypt(text:str, k:int)-> DataLine:
-        rows = DataLine()
+    def encrypt(text:str, k:int)-> ArrayList:
+        rows = ArrayList()
         # Prepare row
         for i in range(0,k):
             row = list()
-            rows.add(row)
+            rows.append(row)
         # bounce rows
         index =0
         increment = 1
         print("k:"+str(k))
         for char in text:
             print("index:"+str(index))
-            rows.data[index].append(char)
+            rows[index].append(char)
             index += increment
             if index >= k:
                 increment = -1
@@ -159,8 +154,7 @@ class Fence:
                 index = 1
                 increment = 1
 
-
-        for r in rows.data:
+        for r in rows:
             print(r)
 
         return rows
@@ -169,9 +163,9 @@ class Fence:
 
 
     @staticmethod
-    def makeFanceTable(text:str, k:int)->Table:
+    def makeFenceTable(text:str, k:int)->Table:
         table = Table()
-        table.nullValue ="_"
+        table.nullValue = Fence.tableNullValue
         line = 0
         column = 0
         increment = 1
@@ -191,24 +185,25 @@ class Fence:
     def decrypt(text: str, k: int, reverse=False) -> str:
         ans=""
         size = len(text)
-        txt = DataLine()
+        txt = ArrayList()
         txt.populateFromString(text)
-        table = Fence.makeFanceTable("#" * size, k)
+        unusedChar = Fence.unusedCharacter
+        table = Fence.makeFenceTable(unusedChar * size, k)
         table.equalize()
-        if(reverse):
-            table.data.reverse()
-        for row in table.data:
-            symLen = row.data.count("#")
+        if reverse:
+            table.lines.reverse()
+        for row in table.lines:
+            symLen = row.count(unusedChar)
             for i in range(0,symLen):
-                index = row.indexOf("#")
-                row.set(index,txt.remove(0))
+                index = row.indexOf(unusedChar)
+                row.set(index,txt.pop(0))
         line = 0
         column = 0
         increment = 1
         if reverse:
             line = size-1
 
-        table.printMe()
+        # table.printMe()
         while column < size:
             ans+= table.get(line,column)
             column += 1
@@ -219,11 +214,45 @@ class Fence:
             elif line < 0:
                 line = 1
                 increment = 1
-        return str(k)+";"+ans
+        return str(k)+": "+ans
 
     @staticmethod
-    def bruteForce(text:str,rangeStart:int,rangeEnd:int,reversed=False)->list:
-        fullList = list()
+    def bruteForce(text:str,rangeStart:int,rangeEnd:int,reverse=False)->list:
+        fullList = ArrayList()
         for i in range(rangeStart,rangeEnd+1):
-            fullList.append(Fence.decrypt(text,i,reversed))
+            fullList.append(Fence.decrypt(text,i,reverse))
         return fullList
+
+class Fleissner:
+    markerSymbol = "#"
+    tableNullValue = "_"
+    @staticmethod
+    def decryptOnce(text:str,rowLen:int,Key:list, turnClockWise=True):
+        Key.sort()
+        table = Table.createTable(text,rowLen)
+        keyTable = Table.createTable(Fleissner.tableNullValue*len(text),rowLen)
+        table.equalize()
+        keyTable.equalize()
+        keyTable.name = "Key"
+        marker = Fleissner.markerSymbol
+        nullValue = Fleissner.tableNullValue
+        for markerPlace in Key:
+            keyTable.setFromTopLeft(markerPlace,marker)
+        copy = table.__copy__()
+        copy.name = "Copy"
+        keyCount = Key.__len__()
+        ans=""
+        for turn in range(0,keyCount):
+
+            keyTableCopy = keyTable.__copy__()
+            index = keyTableCopy.indexFromTopLeft(marker)
+            while index >=0:
+                keyTableCopy.setFromTopLeft(index,nullValue)
+                ans+= table.getFromTopLeft(index)
+                index = keyTableCopy.indexFromTopLeft(marker)
+            if turnClockWise:
+                keyTable.rotateClockwise(1)
+            else:
+                keyTable.rotateCounterClockwise(1)
+
+        return ans

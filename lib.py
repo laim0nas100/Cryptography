@@ -21,150 +21,206 @@ class Object:
     def __str__(self):
         return "name=" + str(self.name) + " value=" + str(self.value)
 
+class ArrayList(list):
 
-class DataLine:
-    def __init__(self, nullValue=" "):
-        self.data = []
+    def __init__(self, data=None, nullValue=" "):
+        super().__init__()
         self.nullValue = nullValue
-    def __len__(self):
-        return len(self.data)
+        if data is not None:
+            for val in data:
+                self.append(val)
 
     def __fitsInRange(self, index:int):
-        if len(self.data) <= index:
+        if self.__len__() <= index:
             return False
         else:
             return True
 
     def appendToSize(self, requiredSize):
-        while  self.__len__() < requiredSize:
-            self.data.append(self.nullValue)
-
-    def add(self, value, index=None):
-        if index is None:
-            self.data.append(value)
-        elif not self.__fitsInRange(index):
-            self.appendToSize(index)
-            self.data.append(value)
-        else:
-            self.data.insert(index, value)
-
-    def set(self, index, value):
-        if not self.__fitsInRange(index):
-            self.appendToSize(index+1)
-        self.data[index] = value
+        size = self.__len__()
+        for i in range(size,requiredSize):
+            self.append(self.nullValue)
 
     def indexOf(self, value):
         i = -1
-        for val in self.data:
+        for val in self:
             i+=1
             if value == val:
                 return i
         return -1
 
-    def remove(self, index):
-        ob = self.data[index]
-        del self.data[index]
-        return ob
+    def lastIndexOf(self, value):
+        i = self.__len__()
+        while i>=0:
+            i -= 1
+            if value == self[i]:
+                return i
+        return -1
 
-    def __copy__(self):
-        line = DataLine()
-        for ob in self.data:
-            line.add(ob)
-        return line
+    def insert(self, index:int, value):
+        self.appendToSize(index)
+        super().insert(index, value)
+
+    def set(self,index:int, value):
+        self.appendToSize(index+1)
+        self[index] = value
 
     def populateFromString(self, text):
-
         for i in text:
-            self.add(i)
-
-    def __str__(self):
-        return formatListToString(self.data)
+            self.append(i)
 
 
 class Table:
     def __init__(self, data=None):
-        self.data = []
+        self.lines = list(ArrayList())
         self.name = "Table"
         self.nullValue =""
         if data is not None:
-            self.data.extend(data)
+            self.lines.extend(data)
 
     def equalize(self):
         maxTableLen = 0
-        for line in self.data:
+        for line in self.lines:
             if maxTableLen < line.__len__():
                 maxTableLen = line.__len__()
-        for line in self.data:
+        for line in self.lines:
             line.appendToSize(maxTableLen)
 
     def addLine(self, line):
-        self.data.append(line)
+        self.lines.append(line)
 
     def remove(self, line, column):
-        ob = self.data[line].data[column]
-        del self.data[line].data[column]
+        ob = self.lines[line].pop(column)
         return ob
 
     def get(self, line, column):
-        ob = self.data[line].data[column]
-        return ob
+        ob = self.lines[line]
+        return ob[column]
 
     def set(self, line: int, column: int, value):
         while line >= self.getLineCount():
-            self.addLine(DataLine(self.nullValue))
-        self.data[line].set(column, value)
+            self.addLine(ArrayList(self.nullValue))
+        self.lines[line].set(column, value)
 
     def getLineCount(self):
-        return self.data.__len__()
+        return self.lines.__len__()
 
     def getColumnCount(self):
         self.equalize()
-        if self.getColumnCount()>0:
-            return self.data.__len__()
+        if self.getLineCount()>0:
+            return self.lines.__len__()
         else:
             return 0
+    def getColumn(self,col)->list:
+        column = ArrayList()
+        for i in range(self.getLineCount()):
+            column.append(self.get(i,col))
+        return column
+
+    def setColumn(self,index:int,column:list):
+        i=0
+        for value in column:
+            self.set(i,index,value)
+            i+=1
+
+    def getFromTopLeft(self,index:int):
+        i =0
+        for line in self.lines:
+            for value in line:
+                if i == index:
+                    return value
+                i+=1
+
+    def setFromTopLeft(self,index:int,value):
+        i = 0
+        for line in self.lines:
+            for valIndex in range(0,line.__len__()):
+                if i == index:
+                    line[valIndex] = value
+                    return
+                i += 1
+
+    def indexFromTopLeft(self,findMe):
+        i = 0
+        for line in self.lines:
+            for value in line:
+                if findMe == value:
+                    return i
+                i += 1
+        return -1
+
+    def __copy__(self):
+        table = Table()
+        for i in range(0,self.getLineCount()):
+            table.addLine(self.lines[i].copy())
+        return table
 
     def __str__(self):
         string = self.name+u"\n"
-        for line in self.data:
-            string += line.__str__()+u"\n"
+        i = 0
+        for line in self.lines:
+            string += str(i)+":"+line.__str__()+u"\n"
+            i+=1
         return string
 
     def printMe(self):
-        print (self.name)
-        for line in self.data:
-            print (line.__str__())
+        print(self.name)
+        for line in self.lines:
+            print(line.__str__())
+
+    def __rotateCW(self):
+        table = Table()
+        for i in range(0,self.getLineCount()):
+            line = self.lines[i]
+            table.setColumn(self.getLineCount()-i-1,line)
+        self.lines = table.lines
+
+    def __rotateCCW(self):
+        table = Table()
+        for i in range(0, self.getLineCount()):
+            line = self.lines[i]
+            line.reverse()
+            table.setColumn(i, line)
+        self.lines = table.lines
+
+    def rotateClockwise(self, times):
+        for i in range(0,times):
+            self.__rotateCW()
+
+    def rotateCounterClockwise(self, times):
+        for i in range(0,times):
+            self.__rotateCCW()
 
     @staticmethod
     def createTable(text, lineLength, linesAreColumns=False):
         table = Table()
         index = 0
         lineIndex = 0
-        origline = DataLine()
+        origline = ArrayList()
         for i in text:
-            origline.add(i)
-        line = DataLine()
-        size = origline.data.__len__()
+            origline.append(i)
+        line = ArrayList()
+        size = origline.__len__()
 
         if not linesAreColumns:
             while index < size:
                 if lineIndex >= lineLength:
                     table.addLine(line)
-                    line = DataLine()
+                    line = ArrayList()
                     lineIndex = 0
-                line.set(lineIndex, origline.data[index])
+                line.set(lineIndex, origline[index])
                 index += 1
                 lineIndex += 1
             table.addLine(line)
         else:
-            while table.getLineCount()<lineLength:
-                table.addLine(DataLine())
+            while table.getLineCount() < lineLength:
+                table.addLine(ArrayList())
             currentIndex = 0
             while index < size:
                 if lineIndex >= lineLength:
                     lineIndex = 0
-                    currentIndex+=1
-                table.set(lineIndex, currentIndex, origline.data[index])
+                    currentIndex += 1
+                table.set(lineIndex, currentIndex, origline[index])
                 index += 1
                 lineIndex += 1
         return table
