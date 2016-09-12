@@ -13,13 +13,10 @@ def formatListToString(array):
     return "["+string[:-1] + "]"
 
 
-class Object:
-    def __init__(self, name, value):
-        self.name = name
-        self.value = value
+class String(str):
+    def __init__(self, text: str):
+        super().__init__()
 
-    def __str__(self):
-        return "name=" + str(self.name) + " value=" + str(self.value)
 
 class ArrayList(list):
 

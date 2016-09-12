@@ -30,20 +30,7 @@ class Skytale:
 
 class Transposition:
 
-    @staticmethod
-    def cmpByAlphabet(alphabet):
-        line = ArrayList()
-        line.populateFromString(alphabet)
-        def cmpItems(a, b):
-            index1 = line.indexOf(a)
-            index2 = line.indexOf(b)
-            ans = 0
-            if index1 < index2:
-                ans = -1
-            elif index1 > index2:
-                ans = 1
-            return ans
-        return cmpItems
+
 
     @staticmethod
     def getKeyArray(Key, alphabet) -> ArrayList:
@@ -51,7 +38,7 @@ class Transposition:
         array = ArrayList()
         array.populateFromString(Key)
         sortedKey.populateFromString(Key)
-        sortedKey.sort(key=cmp_to_key(Transposition.cmpByAlphabet(alphabet)))
+        sortedKey.sort(key=cmp_to_key(IOlib.InputFormatter.cmpByAlphabet(alphabet)))
         keyNumbers = ArrayList()
         print(sortedKey)
         for letter in array:
