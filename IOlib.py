@@ -9,7 +9,7 @@ from libs.crypt.lib import ArrayList, cmp_to_key
 
 class InputFormatter:
     alphabets = dict()
-
+    dictionaries = dict()
     @staticmethod
     def init():
         InputFormatter.addAlphabet("en", "ABCDEFGHJIKLMNOPQRSTUVWXYZ")
@@ -20,6 +20,27 @@ class InputFormatter:
     @staticmethod
     def addAlphabet(key, alph):
         InputFormatter.alphabets.setdefault(key, alph)
+
+    @staticmethod
+    def addDictionary(key, dictionary):
+        InputFormatter.dictionaries.setdefault(key,dictionary)
+
+    @staticmethod
+    def stringContainsWord(text:str,dictionary:list,wordLen=None):
+        found = False
+        for word in dictionary:
+            if wordLen is not None:
+                if len(word)>= wordLen:
+                    if word in text:
+                        found = True
+            else:
+                if word in text:
+                    found = True
+            if found:
+                print("Found:"+word)
+                return True
+        return False
+
 
     @staticmethod
     def cmpByAlphabet(alphabet):
@@ -151,6 +172,16 @@ def printListToFile(filePath,array:list):
     file.flush()
     file.close()
 
+def readListFromFile(filePath)->list:
+    file = open(filePath,'r')
+    array = ArrayList()
+    for line in file.readlines():
+        if line.__len__()>1:
+
+            array.append(stringReplace(line,'\n'))
+    return array
+
+
 def stringReplace(source:str,target:str,replacement="")->str:
     if target not in source:
         return source
@@ -160,6 +191,8 @@ def stringReplace(source:str,target:str,replacement="")->str:
     except ValueError:
         return source
     return new
+
+
 
 def dictionaryExtract(lines,Key=None):
     array = ArrayList()

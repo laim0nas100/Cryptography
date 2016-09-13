@@ -108,11 +108,18 @@ class Table:
             return self.lines.__len__()
         else:
             return 0
+
     def getColumn(self,col)->list:
         column = ArrayList()
         for i in range(self.getLineCount()):
             column.append(self.get(i,col))
         return column
+
+    def setLine(self,index:int,line:list):
+        i = 0
+        for value in line:
+            self.set(index, i, value)
+            i += 1
 
     def setColumn(self,index:int,column:list):
         i=0
@@ -145,6 +152,9 @@ class Table:
                     return i
                 i += 1
         return -1
+
+    def getCellCount(self):
+        return self.getColumnCount()*self.getLineCount()
 
     def __copy__(self):
         table = Table()
@@ -180,11 +190,11 @@ class Table:
             table.setColumn(i, line)
         self.lines = table.lines
 
-    def rotateClockwise(self, times):
+    def rotateClockwise(self, times=1):
         for i in range(0,times):
             self.__rotateCW()
 
-    def rotateCounterClockwise(self, times):
+    def rotateCounterClockwise(self, times=1):
         for i in range(0,times):
             self.__rotateCCW()
 

@@ -1,5 +1,6 @@
 import math
 from libs.crypt import IOlib
+from libs.crypt.Math import Math
 from libs.crypt.lib import *
 
 
@@ -44,7 +45,7 @@ class Transposition:
         for letter in array:
             # print(" checking:"+letter,)
             number = sortedKey.indexOf(letter)
-            if not number in keyNumbers:
+            if number not in keyNumbers:
                 keyNumbers.append(number)
             else:
                 keyNumbers.append(number+1)
@@ -243,3 +244,47 @@ class Fleissner:
                 keyTable.rotateCounterClockwise(1)
 
         return ans
+
+
+
+class Affine:
+    @staticmethod
+    def charsToNumbers(text:str,alphabet:str)->list:
+        array = ArrayList()
+        for char in text:
+            array.append(alphabet.index(char))
+        return array
+
+    @staticmethod
+    def numbersToChars(array:list,alphabet:str)->str:
+        string = ""
+        for index in array:
+            string+=alphabet[index]
+        return string
+
+    @staticmethod
+    def encrypt(array:list,alpha:int,beta:int,modulus:int)->list:
+        newList = ArrayList()
+        for number in array:
+            newList.append((number * alpha + beta) % modulus)
+        return newList
+
+    @staticmethod
+    def encryptSingle(text:str,alphabet:str,alpha:int,beta:int):
+        array = Affine.charsToNumbers(text,alphabet)
+        newArray = Affine.encrypt(array,alpha,beta,len(alphabet))
+        return Affine.numbersToChars(newArray,alphabet)
+
+    @staticmethod
+    def decrypt(array:list,alpha:int,beta:int,modulus:int)->list:
+        newList = ArrayList()
+        alpha = Math.multiplicativeInverse(alpha,modulus)
+        for number in array:
+            newList.append((alpha *(number - beta)) % modulus)
+        return newList
+
+    @staticmethod
+    def decryptSingle(text:str,alphabet:str,alpha:int,beta:int):
+        array = Affine.charsToNumbers(text,alphabet)
+        newArray = Affine.decrypt(array,alpha,beta,len(alphabet))
+        return Affine.numbersToChars(newArray,alphabet)
