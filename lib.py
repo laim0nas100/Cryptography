@@ -152,6 +152,20 @@ class Table:
                     return i
                 i += 1
         return -1
+    def indexFromTop(self,findMe):
+        i = 0
+        for line in self.lines:
+            if line.indexOf(findMe) >= 0:
+                return i
+            i+=1
+        return -1
+
+    def indexFromLeft(self,findMe):
+        for line in self.lines:
+            indexOf = line.indexOf(findMe)
+            if indexOf >= 0:
+                return indexOf
+        return -1
 
     def removeLine(self,index:int):
         del self.lines[index]

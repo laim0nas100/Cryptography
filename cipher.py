@@ -246,12 +246,85 @@ class Fleissner:
         return ans
 
 class Bifid:
+
     @staticmethod
-    def decrypt(text:str):
-        pass
-#       TODO:
+    def printablePairList(pairs:list):
+        line1 = ""
+        line2 = ""
+        for i in range(0,pairs.__len__()):
+            line1+=str(pairs[i][0])+","
+            line2+=str(pairs[i][1])+","
+        return line1+"\n"+line2
+
+    @staticmethod
+    def createBifidTable(key:str,alphabet:str)->Table:
+        abc=""
+        combined = key + alphabet
+        for char in combined:
+            if char not in abc:
+                abc+=char
+        # print(abc)
+        table = Table()
+        dim = Math.math.sqrt(abc.__len__())
+        if dim - Math.math.floor(dim)!=0:
+            dim = Math.math.floor(dim) + 1
+        else:
+            dim = Math.math.floor(dim)
+
+        for i in range(0,abc.__len__()):
+            table.set(i//dim, i % dim, abc[i])
+
+        table.equalize()
+        return table
+
+    @staticmethod
+    def createPairArray(text:str, table:Table):
+        arrayList = ArrayList()
+        for char in text:
+            first = table.indexFromTop(char)
+            second = table.indexFromLeft(char)
+            pair = ArrayList()
+            pair.append(first)
+            pair.append(second)
+            arrayList.append(pair)
+        return arrayList
+
+    @staticmethod
+    def pairToLetter(pair:list,table:Table):
+        return table.get(pair[0],pair[1])
+
+    @staticmethod
+    def manglePairs(pairList:ArrayList,k:int):
+        l1 = ArrayList()
+        l2 = ArrayList()
+        line = ArrayList()
+        for pairI in range(0,pairList.__len__()):
+            line.append(pairList[pairI][0])
+            line.append(pairList[pairI][1])
+            if (1+pairI) % k==0:
+                for i in range(0,line.__len__()//2):
+                    l1.append(line[i])
+                for i in range(line.__len__()//2,line.__len__()):
+                    l2.append(line[i])
+                line.clear()
+        newPairList = ArrayList()
+        # print(l1)
+        # print(l2)
+        for i in range(l1.__len__()):
+            newPairList.append([l1[i], l2[i]])
+        return newPairList
 
 
+
+    @staticmethod
+    def decryptSingle(text:str,k:str,alphabet:str,period:int) -> str:
+        table = Bifid.createBifidTable(k, alphabet)
+        pairs = Bifid.createPairArray(text, table)
+        pairs = Bifid.manglePairs(pairs, period)
+        string = ""
+        for pair in pairs:
+            string += Bifid.pairToLetter(pair, table)
+        return string
 
 class Affine:
     @staticmethod
