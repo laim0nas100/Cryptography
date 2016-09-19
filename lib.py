@@ -24,8 +24,7 @@ class ArrayList(list):
         super().__init__()
         self.nullValue = nullValue
         if data is not None:
-            for val in data:
-                self.append(val)
+            self.extend(data)
 
     def __fitsInRange(self, index:int):
         if self.__len__() <= index:
@@ -69,9 +68,10 @@ class ArrayList(list):
 
 class Table:
     def __init__(self, data=None):
-        self.lines = list(ArrayList())
+
         self.name = "Table"
-        self.nullValue =""
+        self.nullValue =" "
+        self.lines = ArrayList(ArrayList(None,self.nullValue))
         if data is not None:
             self.lines.extend(data)
 
@@ -83,8 +83,9 @@ class Table:
         for line in self.lines:
             line.appendToSize(maxTableLen)
 
-    def addLine(self, line):
-        self.lines.append(line)
+    def addLine(self, line=None):
+        arrayList = ArrayList(line,self.nullValue)
+        self.lines.append(arrayList)
 
     def remove(self, line, column):
         ob = self.lines[line].pop(column)
@@ -96,19 +97,18 @@ class Table:
 
     def set(self, line: int, column: int, value):
         while line >= self.getLineCount():
-            self.addLine(ArrayList(self.nullValue))
+            self.addLine()
+
         self.lines[line].set(column, value)
 
     def getLineCount(self):
         return self.lines.__len__()
 
     def getColumnCount(self):
-        self.equalize()
-        if self.getLineCount()>0:
-            return self.lines.__len__()
-        else:
-            return 0
-
+        m = 0
+        for line in self.lines:
+            m = max(m,line.__len__())
+        return m
     def getColumn(self,col)->list:
         column = ArrayList()
         for i in range(self.getLineCount()):
@@ -152,6 +152,13 @@ class Table:
                     return i
                 i += 1
         return -1
+
+    def removeLine(self,index:int):
+        del self.lines[index]
+
+    def removeColumn(self,index:int):
+        for line in self.lines:
+            line.pop(index)
 
     def getCellCount(self):
         return self.getColumnCount()*self.getLineCount()
@@ -197,6 +204,27 @@ class Table:
     def rotateCounterClockwise(self, times=1):
         for i in range(0,times):
             self.__rotateCCW()
+
+    def __flipVertical(self):
+        for line in self.lines:
+            line.reverse()
+
+    def flip(self, VerticalAxis=True):
+        if not VerticalAxis:
+            self.rotateClockwise(2)
+        self.__flipVertical()
+
+    def applyNullValue(self,nullValue):
+        for i in range(0,self.getCellCount()):
+            if self.getFromTopLeft(i) == self.nullValue:
+                self.setFromTopLeft(i,nullValue)
+        self.nullValue = nullValue
+        for line in self.lines:
+            line.nullValue = nullValue
+
+    def applyToEachElement(self,function):
+        for i in range(0, self.getCellCount()):
+            self.setFromTopLeft(i, function(self.getFromTopLeft(i)))
 
     @staticmethod
     def createTable(text, lineLength, linesAreColumns=False):

@@ -1,6 +1,6 @@
 import math
 from libs.crypt import IOlib
-from libs.crypt.Math import Math
+from libs.crypt.Math import Math, Matrix
 from libs.crypt.lib import *
 
 
@@ -245,6 +245,12 @@ class Fleissner:
 
         return ans
 
+class Bifid:
+    @staticmethod
+    def decrypt(text:str):
+        pass
+#       TODO:
+
 
 
 class Affine:
@@ -288,3 +294,34 @@ class Affine:
         array = Affine.charsToNumbers(text,alphabet)
         newArray = Affine.decrypt(array,alpha,beta,len(alphabet))
         return Affine.numbersToChars(newArray,alphabet)
+
+class Hill:
+
+
+    @staticmethod
+    def applyCipher(vector:Matrix, matrix:Matrix, modulus:int)->Matrix:
+        def m(x):
+            return int(x) % modulus
+        newVector = Math.matrixMultiplication(matrix, vector)
+        newVector.applyToEachElement(m)
+        return newVector
+
+    @staticmethod
+    def singleCypher(text:str,matrix:Matrix,alphabet:str)->str:
+        numbers = Affine.charsToNumbers(text,alphabet)
+        vectors = ArrayList()
+        for i in range(0,numbers.__len__(),matrix.getLineCount()):
+            vector = Matrix()
+            for j in range(0,2):
+                vector.set(j,0,numbers[i+j])
+            vectors.append(vector)
+        res=""
+        for i in range(0,vectors.__len__()):
+            if vectors[i] is None:
+                print(i)
+            else:
+                # print(vectors[i])
+                vec = Hill.applyCipher(vectors[i], matrix, alphabet.__len__())
+                for j in range(0,2):
+                    res+= alphabet[vec.get(j,0)]
+        return res

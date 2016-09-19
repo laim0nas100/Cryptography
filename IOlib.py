@@ -135,7 +135,7 @@ def __go(indexArrayList: ArrayList, current: ArrayList, left: ArrayList, i:int, 
         # Debug.print("add:"+current.__str__())
         return
     else:
-        current.append(left.remove(i))
+        current.append(left.pop(i))
         length = left.__len__()
         # Debug.print("Cur:" + current.__str__() + " Left:" + left.__str__() + " len =" + str(length), end="")
         # Debug.print(" index:" + str(i))
