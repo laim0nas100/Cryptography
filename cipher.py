@@ -398,3 +398,63 @@ class Hill:
                 for j in range(0,2):
                     res+= alphabet[vec.get(j,0)]
         return res
+
+class Vigenere:
+    @staticmethod
+    def createVinegereTable(alphabet:str)->Table:
+        table = Table()
+        currentRow = alphabet
+        line = ArrayList()
+        for i in range(0,alphabet.__len__()):
+            line.clear()
+            line.populateFromString(currentRow)
+            table.addLine(line)
+            currentRow = currentRow[1:] + currentRow[:1]
+        return table
+
+    @staticmethod
+    def extendKeyToLength(k:str,length:int):
+        i = 0
+        modulus = k.__len__()
+        newKey = k
+        while newKey.__len__()<length :
+            newKey += k[i]
+            i+=1
+            i = i % modulus
+        return newKey
+
+    @staticmethod
+    def getLetterByKeyFromTable(letter:str,k:str,table:Table,alphabet:str,encryption=True):
+        keyLetterIndex = alphabet.index(k)
+        textLetterIndex = alphabet.index(letter)
+        cipherTextLetter = None
+        if encryption:  # [key Row , text column ]= cipherText letter
+            cipherTextLetter = table.get(keyLetterIndex,textLetterIndex)
+        else:
+            row = table.lines[keyLetterIndex]
+            textLetterIndex = row.indexOf(letter)
+            cipherTextLetter = alphabet[textLetterIndex]
+        return cipherTextLetter
+
+    @staticmethod
+    def crypt(text:str,k:str,alphabet:str,encryption=True):
+        k = Vigenere.extendKeyToLength(k,text.__len__())
+        table = Vigenere.createVinegereTable(alphabet)
+        crypticText = ""
+        print("usedKey:"+k)
+        for i in range(0,text.__len__()):
+            crypticText+= Vigenere.getLetterByKeyFromTable(text[i],k[i],table,alphabet,encryption)
+        return crypticText
+
+    @staticmethod
+    def cryptMassive(text:str,k:str, table:Table,alphabet:str,length:int):
+        crypticText = ""
+        k = Vigenere.extendKeyToLength(k, length)
+        for i in range(0, length):
+            crypticText += Vigenere.getLetterByKeyFromTable(text[i], k[i], table, alphabet, False)
+        return crypticText
+
+
+
+
+
