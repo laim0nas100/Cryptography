@@ -11,7 +11,7 @@ class InputFormatter:
     dictionaries = dict()
     @staticmethod
     def init():
-        InputFormatter.addAlphabet("en", "ABCDEFGHJIKLMNOPQRSTUVWXYZ")
+        InputFormatter.addAlphabet("en", "ABCDEFGHIJKLMNOPQRSTUVWXYZ")
         InputFormatter.addAlphabet("ltC", "AĄBCČDEĘĖFGHIĮYJKLMNOPRSŠTUŲŪVZŽ")
         InputFormatter.addAlphabet("lt", "aąbcčdeęėfghiįyjklmnoprsštuųūvzž")
         InputFormatter.addAlphabet("slt", "ABCČDEFGHIYJKLMNOPRSTUVZŽ")

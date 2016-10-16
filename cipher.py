@@ -454,7 +454,141 @@ class Vigenere:
             crypticText += Vigenere.getLetterByKeyFromTable(text[i], k[i], table, alphabet, False)
         return crypticText
 
+class Enigma:
 
+    @staticmethod
+    def createRotorFromArray(array:list,alphabet:str):
+        rotor = ArrayList()
+        for number in array:
+            rotor.append(alphabet[number])
+        return rotor
 
+    def __init__(self,alphabet:str,listOfRotors:list,shiftKeys:list,reflectionArray:list = None):
+        self.alphabet = alphabet
+        self.rotors = ArrayList()
+        self.keys = ArrayList()
+        self.mod = alphabet.__len__()
+        self.reflection = reflectionArray
+        for rotor in listOfRotors:
+            self.rotors.append(rotor)
+        for key in shiftKeys:
+            self.keys.append(key)
 
+    def __lam(self,rotorNo:int,c):
+        return self.rotors.get(rotorNo)[c]
 
+    def __lamInverse(self,rotorNo:int,c):
+        return self.rotors.get(rotorNo).index(c)
+
+    def __ro(self,c:int, m:int)->int:
+        return (c + m) % self.mod
+
+    def __iteration(self,c:int,index:int,key:int,rotorNo:int,inverse=True):
+        c0 = self.__ro(c, index + key)
+        if inverse:
+            c1 = self.__lamInverse(rotorNo,c0)
+        else:
+            c1 = self.__lam(rotorNo,c0)
+
+        c2 = self.__ro(c1, 0 - index - key)
+        return c2
+
+    # def __decrypt2(self,c,k):
+    #     m1 = k % self.mod
+    #     m2 = k // self.mod
+    #     k1,k2 = self.keys[0],self.keys[1]
+    #     c1 = self.__iteration(c,m2,k2,1)
+    #     c2 = self.__iteration(c1,m1,k1,0)
+    #     return c2
+    # def __encrypt(self,c,k):
+    #     m1 = k % self.mod
+    #     m2 = k // self.mod
+    #     k1, k2 = self.keys[0], self.keys[1]
+    #     c1 = self.__iteration(c, m1, k1, 1)
+    #     c2 = self.__iteration(c1, m2, k2, 0)
+    #     return c2
+    def __rotorIndex(self,index:int,rotorNo:int):
+        if rotorNo == 0:
+            return index % self.mod
+        else:
+            for i in range(0,rotorNo):
+                index = index // self.mod
+            return index
+
+    def __crypt(self,c,k,decrypt=True):
+        if decrypt:
+            for i in range(self.rotors.__len__()-1,-1,-1):
+                c = self.__iteration(c,self.__rotorIndex(k,i),self.keys[i],i,decrypt)
+            return c
+        else:
+            for i in range(0,self.rotors.__len__()):
+                c = self.__iteration(c,self.__rotorIndex(k,i),self.keys[i],i,decrypt)
+            return c
+
+    def decrypt(self,cipher:str,reflection=False):
+        toArray = list()
+        for let in cipher:
+            toArray.append(self.alphabet.index(let))
+        rez = ""
+        if not reflection:
+            for i in range(0, len(cipher) - 1):
+                let = self.__crypt(toArray[i], i,True)
+                rez += self.alphabet[let]
+        else:
+            for i in range(0, len(cipher) - 1):
+                c0 = self.__crypt(toArray[i],i,False)
+                c1 = self.reflection.index(c0)
+                c2 = self.__crypt(c1, i, True)
+                rez += self.alphabet[c2]
+
+        return rez
+
+    def encrypt(self,cipher:str,reflection=False):
+        toArray = list()
+        for let in cipher:
+            toArray.append(self.alphabet.index(let))
+        rez = ""
+        if not reflection:
+            for i in range(0, len(cipher) - 1):
+                let = self.__crypt(toArray[i], i, False)
+                rez += self.alphabet[let]
+        else:
+            for i in range(0, len(cipher) - 1):
+                c0 = self.__crypt(toArray[i], i, True)
+                c1 = self.reflection.index(c0)
+                c2 = self.__crypt(c1, i, False)
+                rez += self.alphabet[c2]
+
+        return rez
+
+class Feistel:
+    @staticmethod
+    def encrypt(text,keys,function,returnText=True):
+        cipher = list()
+        for pair in text:
+            left, right = pair[0], pair[1]
+            for k in keys:
+                f_out = function(right, k)
+                left = left ^ f_out
+                left, right = right, left
+
+            left, right = right, left  # last iteration does not need to be swapped, so swap back
+            cipher.append([left, right])
+        if returnText:
+            return Feistel.blocksToString(cipher)
+        else:
+            return cipher
+
+    @staticmethod
+    def decrypt(text, key, function,returnText=True):
+        keyrev = key
+        keyrev.reverse()
+        return Feistel.encrypt(text, keyrev, function, returnText)  # just reverse the key for decryption
+
+    @staticmethod
+    def blocksToString(blocks):
+        message = ""
+        from itertools import chain
+        for c in chain.from_iterable(blocks):
+            message += chr(c)
+        return message

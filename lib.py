@@ -65,6 +65,9 @@ class ArrayList(list):
         for i in text:
             self.append(i)
 
+    def get(self,index:int):
+        return self[index]
+
 
 class Table:
     def __init__(self, data=None):
